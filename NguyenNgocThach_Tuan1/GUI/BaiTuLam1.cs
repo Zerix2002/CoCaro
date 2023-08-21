@@ -215,6 +215,10 @@ namespace NguyenNgocThach_Tuan1.GUI
             batDau(false); // X đi trước
         }
 
+        private void hello()
+        {
+            //hihii
+        }
 
     }
 }
