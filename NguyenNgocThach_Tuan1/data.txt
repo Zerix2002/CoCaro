@@ -1,0 +1,12 @@
+﻿Grain
+Bread
+Beans
+Eggs
+Chicken
+Milk
+Fruit
+Vegetables
+Pasta
+Rice
+Fish
+Beef
