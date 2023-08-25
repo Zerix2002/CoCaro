@@ -62,11 +62,9 @@
     <Compile Include="GUI\BaiTuLam1.Designer.cs">
       <DependentUpon>BaiTuLam1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Minimax.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TicTacToeMinimax.cs" />
-    <Compile Include="ToaDo.cs" />
+    <Compile Include="NuocDi.cs" />
     <EmbeddedResource Include="GUI\BaiMau1.resx">
       <DependentUpon>BaiMau1.cs</DependentUpon>
     </EmbeddedResource>
