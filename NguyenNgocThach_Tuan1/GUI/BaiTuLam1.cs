@@ -23,11 +23,13 @@ namespace NguyenNgocThach_Tuan1.GUI
         int[,] banCo; // Bàn cờ (Mảng 2 chiều)
         int capMaTran = 0; // Kích thước ma trận
 
+        static Size firstSize ;
+
         public BaiTuLam1()
         {
             InitializeComponent();
             CenterToScreen();
-
+            firstSize = this.Size;
         }
 
         #region Tạo form + khởi tạo bàn cờ
@@ -41,7 +43,7 @@ namespace NguyenNgocThach_Tuan1.GUI
             // Chỉnh kích thước form và bàn cờ theo kích thước ma trận
             int width = (int)(panel.Size.Width + 130); // Chiều dài form
             int height = (int)(panel_BanCo.Size.Height + 65); // Chiều cao form
-            Size firstSize = this.Size;
+            
             if (width <= firstSize.Width && height <= firstSize.Height) // Kiểm tra chiều cao và chiều rộng tối thiểu
             {
                 ctr.Size = firstSize;
@@ -456,7 +458,7 @@ namespace NguyenNgocThach_Tuan1.GUI
             return score;
         }
 
-        int Minimax(int[,] board, int depth, bool maximizingPlayer, int player)
+        int Minimax(int[,] board, int depth, int alpha, int beta, bool maximizingPlayer, int player)
         {
             if (depth == 0 || kiemTraKetThuc(board, player))
             {
@@ -469,8 +471,11 @@ namespace NguyenNgocThach_Tuan1.GUI
                 foreach (var move in layDanhSachNuocChuaDi(board))
                 {
                     var childBoard = thucHienNuocDi(board, move, player);
-                    int eval = Minimax(childBoard, depth - 1, false, player);
+                    int eval = Minimax(childBoard, depth - 1, alpha, beta, false, player);
                     maxEval = Math.Max(maxEval, eval);
+                    alpha = Math.Max(alpha, eval);
+                    if (beta <= alpha)
+                        break;
                 }
                 return maxEval;
             }
@@ -480,8 +485,11 @@ namespace NguyenNgocThach_Tuan1.GUI
                 foreach (var move in layDanhSachNuocChuaDi(board))
                 {
                     var childBoard = thucHienNuocDi(board, move, player);
-                    int eval = Minimax(childBoard, depth - 1, true, player);
+                    int eval = Minimax(childBoard, depth - 1, alpha, beta, true, player);
                     minEval = Math.Min(minEval, eval);
+                    beta = Math.Min(beta, eval);
+                    if (beta <= alpha)
+                        break;
                 }
                 return minEval;
             }
@@ -491,17 +499,23 @@ namespace NguyenNgocThach_Tuan1.GUI
         {
             NuocDi bestMove = null;
             int bestEval = int.MinValue;
+            int alpha = int.MinValue;
+            int beta = int.MaxValue;
+
 
             foreach (var move in layDanhSachNuocChuaDi(board))
             {
                 var childBoard = thucHienNuocDi(board, move, player);
-                int eval = Minimax(childBoard, depth - 1, false, player);
+                int eval = Minimax(childBoard, depth - 1, alpha, beta, false, player);
 
                 if (eval > bestEval)
                 {
                     bestEval = eval;
                     bestMove = move;
                 }
+                alpha = Math.Max(alpha, eval);
+                if (beta <= alpha)
+                    break; // Cắt tỉa Alpha-Beta
             }
 
             return bestMove;
