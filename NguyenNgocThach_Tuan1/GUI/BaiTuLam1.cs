@@ -19,19 +19,20 @@ namespace NguyenNgocThach_Tuan1.GUI
          */
 
         bool luotDiCuaNguoiChoi; // Lượt đi
+        bool luotDiCuaMay; // Lượt đi của máy, ngược lại với lượt đi của người chơi
         int[,] banCo; // Bàn cờ (Mảng 2 chiều)
         int capMaTran = 0; // Kích thước ma trận
-        bool luotDiCuaMay; // Lượt đi của máy, ngược lại với lượt đi của người chơi
 
-        public bool LuotDiCuaMay { get => luotDiCuaMay; set => luotDiCuaMay = value; }
+        static Size firstSize ;
 
         public BaiTuLam1()
         {
             InitializeComponent();
             CenterToScreen();
-
+            firstSize = this.Size;
         }
 
+        #region Tạo form + khởi tạo bàn cờ
         /// <summary>
         /// Chỉnh kích thước form theo panel
         /// </summary>
@@ -40,18 +41,18 @@ namespace NguyenNgocThach_Tuan1.GUI
         public void chinhFormTheoPanel(Control ctr, Panel panel)
         {
             // Chỉnh kích thước form và bàn cờ theo kích thước ma trận
-            int width = panel.Size.Width + 100; // Chiều dài form
-            int height = (int)(panel_BanCo.Size.Height + 50); // Chiều cao form
-            if (width <= 200 && height <= 140) // Kiểm tra chiều cao và chiều rộng tối thiểu
+            int width = (int)(panel.Size.Width + 130); // Chiều dài form
+            int height = (int)(panel_BanCo.Size.Height + 65); // Chiều cao form
+            
+            if (width <= firstSize.Width && height <= firstSize.Height) // Kiểm tra chiều cao và chiều rộng tối thiểu
             {
-                ctr.Size = new Size(200, 140);
+                ctr.Size = firstSize;
             }
             else
             {
                 ctr.Size = new Size(width, height);
             }
             CenterToScreen();
-
         }
 
         /// <summary>
@@ -65,6 +66,7 @@ namespace NguyenNgocThach_Tuan1.GUI
             banCo = new int[n, n]; // Khởi tạo bàn cờ
 
             panel_BanCo.Controls.Clear(); // Xóa panel cũ
+            panel_BanCo.Enabled = true;
             panel_BanCo.Size = new Size(n * kichThuoc + khoangTrong, n * kichThuoc + khoangTrong); // Chỉnh kích thước mới cho panel
             // Chỉnh lại form theo panel
             chinhFormTheoPanel(this, panel_BanCo);
@@ -76,9 +78,9 @@ namespace NguyenNgocThach_Tuan1.GUI
 
                 for (int j = 0; j < n; j++)
                 {
-                    NuocDi td = new NuocDi(i, j);
+                    NuocDi nd = new NuocDi(i, j);
 
-                    banCo[i, j] = -1; // Gán giá trị chưa được đi cho từng ô (Chưa có nước đi => -1)
+                    banCo[i, j] = -1; // Gán giá trị chưa có nước đi (-1) cho từng ô
 
                     Button btn = new Button();
                     btn.Size = new Size(kichThuoc, kichThuoc); // Chỉnh kích thước cho từng nút
@@ -86,7 +88,7 @@ namespace NguyenNgocThach_Tuan1.GUI
                     khoangTrongBenTrai += kichThuoc;
                     btn.Top = khoangTrongPhiaTren;
 
-                    btn.Tag = new int[] { td.X, td.Y };
+                    btn.Tag = new int[] { nd.X, nd.Y };
                     btn.Click += btn_Click; // Gán event cho các nút được tạo
 
                     panel_BanCo.Controls.Add(btn); // Thêm nút vào panel
@@ -95,148 +97,62 @@ namespace NguyenNgocThach_Tuan1.GUI
             }
         }
 
-        /// <summary>
-        /// Thay đổi lượt đi hiện tại (O sang X - X sang O)
-        /// </summary>
-        /// <param name="btn">Button để thay đổi text</param>
-        /// <param name="td">Tọa độ của điểm đang được đánh</param>
-        /// <returns>False nếu còn lượt đi hoặc hòa, true nếu có lượt đi thắng</returns>
-        bool thayDoiLuotDi(Button btn, NuocDi td)
+        void thayDoiButton(Button btn, bool luotDi)
         {
-            int luotHienTai = luotDiCuaNguoiChoi ? 0 : 1; // lượt hiện tại là true = 0, false = 1
-            btn.Text = luotDiCuaNguoiChoi ? "O" : "X";
-
-            banCo[td.X, td.Y] = luotHienTai; // Gán giá trị cho ma trận với lượt đi hiện tại
-
-            if (kiemTraNguoiThang(luotHienTai))
-            {
-                MessageBox.Show((luotDiCuaNguoiChoi ? "O" : "X") + " thắng");
-                return true; // Nếu người chơi thắng
-            }
-
-            luotDiCuaNguoiChoi = !luotDiCuaNguoiChoi; // Thay đổi lượt đi hiện tại
-            return false; // Nếu chưa hết nước/hòa
+            // Thay đổi ký tự và màu trên button
+            btn.Text = luotDi ? "O" : "X";
+            btn.BackColor = luotDi ? Color.Green : Color.Red;
         }
 
         void btn_Click(object sender, EventArgs e)
         {
             Button btn = (Button)sender;
             int[] tag = (int[])btn.Tag;
-            NuocDi td = new NuocDi(tag[0], tag[1]);
-            if (btn.Text.Length == 0)
+            NuocDi nd = new NuocDi(tag[0], tag[1]);
+
+            if (banCo[nd.X, nd.Y] == -1) // Kiểm tra ô chưa có nước đi trước khi thực hiện nước đi
             {
-                bool hoa = thayDoiLuotDi(btn, td);
-                if (kiemTraBanDay() && !hoa)
+                thucHienNuocDi(banCo, nd, luotDiCuaNguoiChoi ? 0 : 1);
+                thayDoiButton(btn, luotDiCuaNguoiChoi);
+
+                if(kiemTraNguoiThang(banCo, luotDiCuaNguoiChoi?0:1))
                 {
-                    MessageBox.Show("Hòa");
+                    MessageBox.Show("Bạn thắng!");
+                    panel_BanCo.Enabled = false;
+                    return;
+                }
+                nd = GetBestMove((int[,])banCo.Clone(), 10, luotDiCuaMay ? 0 : 1);
+                banCo[nd.X, nd.Y] = luotDiCuaMay ? 0 : 1;
+                // Tìm và thay đổi văn bản của button AI
+                foreach (Control control in panel_BanCo.Controls)
+                {
+                    if (control is Button aiButton)
+                    {
+                        int[] aiTag = (int[])aiButton.Tag;
+                        if (aiTag[0] == nd.X && aiTag[1] == nd.Y)
+                        {
+                            thayDoiButton(aiButton, luotDiCuaMay);
+                            break;
+                        }
+                    }
                 }
             }
         }
-
-        bool kiemTraNuocDanhHopLe(NuocDi td, int n)
-        {
-            if (td.X >= n || td.Y >= n || td.X < 0 || td.Y < 0)
-            {
-                return false;
-            }
-            return true;
-        }
+        #endregion
 
         /// <summary>
-        ///  Kiểm tra bàn còn vị trí đánh hay không
+        /// Đánh nước đi hiện tại và thay đổi lượt đi từ người sang máy (O sang X - X sang O)
         /// </summary>
-        public bool kiemTraBanDay()
+        /// <param name="btn">Button để thay đổi text</param>
+        /// <param name="nd">x, y của điểm đang được đánh</param>
+        /// <returns>False nếu còn lượt đi hoặc hòa, true nếu có lượt đi thắng</returns>
+        int[,] thucHienNuocDi(int[,] banCo, NuocDi nd, int nuocDiHienTai)
         {
-            foreach (int x in banCo)
-            {
-                if (x == -1)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+            int[,] banCoMoi = (int[,])banCo.Clone();
+            // Gán giá trị cho (ma trận) bàn cờ với lượt đi hiện tại
+            banCo[nd.X, nd.Y] = nuocDiHienTai;
 
-        public bool kiemTraKetThuc(int luotDiHienTai)
-        {
-            return kiemTraBanDay() || kiemTraNguoiThang(luotDiHienTai);
-        }
-
-        /// <summary>
-        /// Kiểm tra nước đi hiện tại có thỏa điều kiện thắng hay không, với ma trận lớn hơn 5 thì kiểm tra 5 ô
-        /// </summary>
-        /// <param name="nuocDiHienTai"></param>
-        /// <returns></returns>
-        public bool kiemTraNguoiThang(int nuocDiHienTai)
-        {
-            int dieuKienThang = capMaTran > 5 ? 5 : capMaTran;
-            // Kiểm tra hàng và cột
-            for (int i = 0; i < capMaTran; i++)
-            {
-                int demHangNgang = 0;
-                int demHangDoc = 0;
-
-                for (int j = 0; j < capMaTran; j++)
-                {
-                    if (banCo[i, j] == nuocDiHienTai)
-                    {
-                        demHangNgang++;
-                        if (demHangNgang == dieuKienThang)
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        demHangNgang = 0;
-                    }
-                    if (banCo[j, i] == nuocDiHienTai)
-                    {
-                        demHangDoc++;
-                        if (demHangDoc == dieuKienThang)
-                        {
-                            return true;
-                        }
-                    }
-                    else demHangDoc = 0;
-                }
-            }
-
-            // Kiểm tra đường chéo chính và phụ
-
-
-            for (int i = 0; i < capMaTran; i++)
-            {
-                int demCheoChinh = 0;
-
-                int demCheoPhu = 0;
-                for (int j = 0; j < capMaTran; j++)
-                {
-                    if (banCo[j, j] == nuocDiHienTai)
-                    {
-                        demCheoChinh++;
-                        if (demCheoChinh == dieuKienThang)
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        demCheoChinh = 0;
-                    }
-                    if (banCo[j, capMaTran - 1 - j] == nuocDiHienTai)
-                    {
-                        demCheoPhu++;
-                        if (demCheoPhu == dieuKienThang)
-                        {
-                            return true;
-                        }
-                    }
-                    else demCheoPhu = 0;
-                }
-            }
-
-            return false;
+            return banCoMoi;
         }
 
         /// <summary>
@@ -253,10 +169,170 @@ namespace NguyenNgocThach_Tuan1.GUI
             int kichThuoc = 30; // Kích thước cho từng button
             int khoangTrong = (int)(kichThuoc * 2 / 3); // Khoảng trống cho phần rìa
             luotDiCuaNguoiChoi = nuocDiTruoc;
+            luotDiCuaMay = !nuocDiTruoc;
             taoBanCo(capMaTran, kichThuoc, khoangTrong); // Gọi hàm tạo bàn cờ
 
         }
 
+        /// <summary>
+        ///  Kiểm tra bàn còn vị trí đánh hay không
+        /// </summary>
+        public bool kiemTraBanDay(int[,] banCo)
+        {
+            foreach (int x in banCo)
+            {
+                if (x == -1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool kiemTraKetThuc(int[,] banCo, int luotDiHienTai)
+        {
+            if (kiemTraNguoiThang(banCo, luotDiHienTai))
+                return true;
+            if (kiemTraBanDay(banCo))
+                return true;
+            return false;
+        }
+
+        List<NuocDi> layDanhSachNuocChuaDi(int[,] banCo)
+        {
+            List<NuocDi> list = new List<NuocDi>();
+
+            for (int i = 0; i < banCo.GetLength(0); i++)
+            {
+                for (int j = 0; j < banCo.GetLength(1); j++)
+                    if (banCo[i, j] == -1)
+                        list.Add(new NuocDi(i, j));
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Kiểm tra nước đi hiện tại có thỏa điều kiện thắng hay không, với ma trận lớn hơn 5 thì kiểm tra 5 ô
+        /// </summary>
+        /// <param name="nuocDiHienTai"></param>
+        /// <returns></returns>
+        public bool kiemTraNguoiThang(int[,] banCo, int nuocDiHienTai)
+        {
+            int dieuKienThang = capMaTran > 5 ? 5 : capMaTran;
+            // Kiểm tra hàng và cột
+            for (int i = 0; i < capMaTran; i++)
+            {
+                int demHangNgang = 0;
+                int demHangDoc = 0;
+
+                for (int j = 0; j < capMaTran; j++)
+                {
+                    if (banCo[i, j] == nuocDiHienTai)
+                    {
+                        demHangNgang++;
+                    }
+                    else
+                    {
+                        demHangNgang = 0;
+                    }
+                    if (banCo[j, i] == nuocDiHienTai)
+                    {
+                        demHangDoc++;
+                    }
+                    else demHangDoc = 0;
+                    if (demHangDoc == dieuKienThang
+                        || demHangNgang == dieuKienThang)
+                        return true;
+                }
+            }
+
+            // Kiểm tra đường chéo chính và phụ
+            for (int i = 0; i < capMaTran; i++)
+            {
+
+                if (capMaTran - i < dieuKienThang)
+                    // Không cần kiểm tra trong góc
+                    return false;
+
+                int demCheoChinhTren = 0;
+                int demCheoChinhDuoi = 0;
+
+                int demCheoPhuTren = 0;
+                int demCheoPhuDuoi = 0;
+
+                int iFake = i;
+
+                for (int j = 0; j < capMaTran - i; j++)
+                {
+                    // Đếm số ô phía trên đường chéo chính
+                    /*
+                     * \|1|1
+                     * 0|\|1
+                     * 0|0|\
+                     */
+                    if (banCo[j, iFake] == nuocDiHienTai)
+                    {
+                        demCheoChinhTren++;
+                    }
+                    else
+                    {
+                        demCheoChinhTren = 0;
+                    }
+
+                    // Đếm số ô phía dưới đường chéo chính
+                    /*
+                     * \|0|0
+                     * 1|\|0
+                     * 1|1|\
+                     */
+                    if (banCo[iFake, j] == nuocDiHienTai)
+                    {
+                        demCheoChinhDuoi++;
+                    }
+                    else
+                    {
+                        demCheoChinhDuoi = 0;
+                    }
+
+                    // Đếm số ô phía duới đường chéo phụ
+                    /*
+                     * 0|0|/
+                     * 0|/|1
+                     * /|1|1
+                     */
+                    if (banCo[((capMaTran - 1) - j), iFake] == nuocDiHienTai)
+                    {
+                        demCheoPhuDuoi++;
+                    }
+                    else demCheoPhuDuoi = 0;
+
+                    // Đếm số ô phía trên đường chéo phụ
+                    /*
+                     * 1|1|/
+                     * 1|/|0
+                     * /|0|0
+                     */
+                    if (((capMaTran - 2) - iFake) >= 0)
+                    {
+                        if (banCo[j, ((capMaTran - 2) - iFake)] == nuocDiHienTai)
+                        {
+                            demCheoPhuTren++;
+                        }
+                        else demCheoPhuTren = 0;
+                    }
+
+                    if (demCheoChinhDuoi == dieuKienThang
+                        || demCheoChinhTren == dieuKienThang
+                        || demCheoPhuDuoi == dieuKienThang
+                        || demCheoPhuTren == dieuKienThang)
+                        return true;
+
+                    iFake++;
+                }
+            }
+
+            return false;
+        }
         /// <summary>
         /// Kiểm tra chuỗi nhập vào là chuỗi số không rỗng (Chuỗi số 0 - 9)
         /// </summary>
@@ -284,39 +360,166 @@ namespace NguyenNgocThach_Tuan1.GUI
         }
         #endregion
 
-        int danhGiaNuocDi(int luotDiHienTai)
+        int danhGiaNuocDi(int[,] banCo, int luotDiHienTai)
         {
-            if (kiemTraNguoiThang(luotDiHienTai)) // Nếu máy thắng
-            {
-                return 10;
-            }
-            else if (kiemTraNguoiThang(luotDiHienTai)) // Nếu người chơi thắng
-            {
-                return -10;
-            }
-            return 0; // Hòa
+            int playerScore = CalculateScore(banCo, luotDiHienTai);
+            int opponentScore = CalculateScore(banCo, GetOpponent(luotDiHienTai));
+
+            return playerScore - opponentScore;
         }
 
-        /*
-         def evaluate(board, player):
-            # Tính toán giá trị đánh giá cho trạng thái hiện tại của bảng
-            # Dựa trên cách bạn muốn đánh giá trạng thái cho người chơi hiện tại
-            Máy thắng -> return 10
-            Người chơi thắng -> return -10
-            Hòa -> return 0
+        int GetOpponent(int player)
+        {
+            return (player == 0) ? 1 : 1;
+        }
 
-        def game_over(board):
-            # Kiểm tra xem trò chơi đã kết thúc chưa (người thắng hoặc hết ô trống)
-            Người hoặc máy hoặc bàn đầy -> return true
-            Ngược lại false
+        static int GetScore(int playerCount, int emptyCount)
+        {
+            if (playerCount == 4) // Thắng
+                return 1000;
+            if (playerCount == 3 && emptyCount == 1) // 3 ô và 1 ô trống
+                return 100;
+            if (playerCount == 2 && emptyCount == 2) // 2 ô và 2 ô trống
+                return 10;
+            return 0;
+        }
 
-        def get_possible_moves(board):
-            # Trả về danh sách các ô trống trên bảng
-            
+        int CalculateScore(int[,] board, int player)
+        {
+            int score = 0;
 
-        def make_move(board, move, player):
-            # Thực hiện nước đi của người chơi tại vị trí `move` trên bảng
-            banCo[move.x, move.y] = player
-         */
+            int rows = board.GetLength(0);
+            int cols = board.GetLength(1);
+
+            // Đếm điểm từng dòng
+            for (int row = 0; row < rows; row++)
+            {
+                int playerCount = 0; // Số lượng ô của người chơi trong dòng
+                int emptyCount = 0;  // Số lượng ô trống trong dòng
+
+                for (int col = 0; col < cols; col++)
+                {
+                    if (board[row, col] == player)
+                        playerCount++;
+                    else if (board[row, col] == ' ')
+                        emptyCount++;
+                }
+
+                // Điểm tăng khi có nhiều ô của người chơi và nhiều ô trống
+                score += GetScore(playerCount, emptyCount);
+            }
+
+            // Đếm điểm từng cột
+            for (int col = 0; col < cols; col++)
+            {
+                int playerCount = 0; // Số lượng ô của người chơi trong cột
+                int emptyCount = 0;  // Số lượng ô trống trong cột
+
+                for (int row = 0; row < rows; row++)
+                {
+                    if (board[row, col] == player)
+                        playerCount++;
+                    else if (board[row, col] == ' ')
+                        emptyCount++;
+                }
+
+                // Điểm tăng khi có nhiều ô của người chơi và nhiều ô trống
+                score += GetScore(playerCount, emptyCount);
+            }
+
+            // Đếm điểm đường chéo chính (từ góc trên trái đến góc dưới phải)
+            int mainDiagonalPlayerCount = 0;
+            int mainDiagonalEmptyCount = 0;
+
+            for (int i = 0; i < Math.Min(rows, cols); i++)
+            {
+                if (board[i, i] == player)
+                    mainDiagonalPlayerCount++;
+                else if (board[i, i] == ' ')
+                    mainDiagonalEmptyCount++;
+            }
+
+            score += GetScore(mainDiagonalPlayerCount, mainDiagonalEmptyCount);
+
+            // Đếm điểm đường chéo phụ (từ góc trên phải đến góc dưới trái)
+            int antiDiagonalPlayerCount = 0;
+            int antiDiagonalEmptyCount = 0;
+
+            for (int i = 0; i < Math.Min(rows, cols); i++)
+            {
+                if (board[i, cols - 1 - i] == player)
+                    antiDiagonalPlayerCount++;
+                else if (board[i, cols - 1 - i] == ' ')
+                    antiDiagonalEmptyCount++;
+            }
+
+            score += GetScore(antiDiagonalPlayerCount, antiDiagonalEmptyCount);
+
+            return score;
+        }
+
+        int Minimax(int[,] board, int depth, int alpha, int beta, bool maximizingPlayer, int player)
+        {
+            if (depth == 0 || kiemTraKetThuc(board, player))
+            {
+                return danhGiaNuocDi(board, player);
+            }
+
+            if (maximizingPlayer)
+            {
+                int maxEval = int.MinValue;
+                foreach (var move in layDanhSachNuocChuaDi(board))
+                {
+                    var childBoard = thucHienNuocDi(board, move, player);
+                    int eval = Minimax(childBoard, depth - 1, alpha, beta, false, player);
+                    maxEval = Math.Max(maxEval, eval);
+                    alpha = Math.Max(alpha, eval);
+                    if (beta <= alpha)
+                        break;
+                }
+                return maxEval;
+            }
+            else
+            {
+                int minEval = int.MaxValue;
+                foreach (var move in layDanhSachNuocChuaDi(board))
+                {
+                    var childBoard = thucHienNuocDi(board, move, player);
+                    int eval = Minimax(childBoard, depth - 1, alpha, beta, true, player);
+                    minEval = Math.Min(minEval, eval);
+                    beta = Math.Min(beta, eval);
+                    if (beta <= alpha)
+                        break;
+                }
+                return minEval;
+            }
+        }
+
+        NuocDi GetBestMove(int[,] board, int depth, int player)
+        {
+            NuocDi bestMove = null;
+            int bestEval = int.MinValue;
+            int alpha = int.MinValue;
+            int beta = int.MaxValue;
+
+
+            foreach (var move in layDanhSachNuocChuaDi(board))
+            {
+                var childBoard = thucHienNuocDi(board, move, player);
+                int eval = Minimax(childBoard, depth - 1, alpha, beta, false, player);
+
+                if (eval > bestEval)
+                {
+                    bestEval = eval;
+                    bestMove = move;
+                }
+                alpha = Math.Max(alpha, eval);
+                if (beta <= alpha)
+                    break; // Cắt tỉa Alpha-Beta
+            }
+
+            return bestMove;
+        }
+
     }
 }

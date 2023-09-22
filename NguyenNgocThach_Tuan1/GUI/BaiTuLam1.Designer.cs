@@ -34,6 +34,7 @@
             this.panel_BanCo = new System.Windows.Forms.Panel();
             this.btnX = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -65,7 +66,7 @@
             // panel_BanCo
             // 
             this.panel_BanCo.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.panel_BanCo.Location = new System.Drawing.Point(86, 12);
+            this.panel_BanCo.Location = new System.Drawing.Point(105, 16);
             this.panel_BanCo.Name = "panel_BanCo";
             this.panel_BanCo.Size = new System.Drawing.Size(10, 10);
             this.panel_BanCo.TabIndex = 3;
@@ -89,11 +90,22 @@
             this.label2.TabIndex = 5;
             this.label2.Text = "Nước đi trước";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(12, 105);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(85, 17);
+            this.checkBox1.TabIndex = 6;
+            this.checkBox1.Text = "Máy đi trước";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
             // BaiTuLam1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(184, 101);
+            this.ClientSize = new System.Drawing.Size(224, 141);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnX);
             this.Controls.Add(this.panel_BanCo);
@@ -115,5 +127,6 @@
         private System.Windows.Forms.Panel panel_BanCo;
         private System.Windows.Forms.Button btnX;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
